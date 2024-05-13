@@ -10,17 +10,66 @@
 
 #define BUFFER_SIZE 200
 
-int main(int argc, char *argv[]) {
-    if (argc != 3) {
-        fprintf(stderr, "Usage: %s <Ip addr> <port>\n", argv[0]);
-        exit(EXIT_FAILURE);
+char* sending(char* client_name, char option) {
+    static char message[15];
+    message[0] = '@';
+
+    switch(option) {
+        case '1': 
+            strncpy(&message[1], client_name, sizeof(message) - 1);
+            message[9] = '0';
+            message[10] = '!';
+            message[11] = 'N';
+            message[12] = ':';
+            message[13] = '0';
+            message[14] = '#';
+            break;
+        default:
+            message[1] = 'E';
+            break;
     }
 
+    return message;
+}
+int main(int argc, char *argv[]) {
+    if (argc != 4) {
+        fprintf(stderr, "Usage: %s <client name> <Ip addr> <port>\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+    //Utworzenie tablicy charów z nazwą klienta
+    char *client_name = argv[1];
+    //Sprawdzenie ile znaków ma nazwa klienta
+    int client_name_len = strlen(client_name);
+    
+    //printf("Client name length: %d\n", client_name_len);
+    //Jeżeli nazwa klienta ma mniej niż 8 znaków to uzupełnij resztę _ do 8 znaków
+    char new_client_name[8];
+    if (client_name_len < 8) {
+        
+        for (int i = 0; i < 8; i++) {
+            if (i < client_name_len) {
+                new_client_name[i] = client_name[i];
+            } else {
+                new_client_name[i] = '_';
+            }
+        }
+    }else if(client_name_len>8){
+        printf("Client name is too long, it should be maximum 8 characters\n");
+        exit(EXIT_FAILURE);
+    }else{
+        for(int i=0;i<8;i++){
+            new_client_name[i]=client_name[i];
+        }
+    }
+
+
+    //Utworzenie struktury sockaddr_in dla serwera
     int portno;
     struct sockaddr_in server_addr;
-    char *ip_addr = argv[1];
+    //Przypisanie ip adresu serwera do zmiennej ip_addr
+    char *ip_addr = argv[2];
 
-    portno = atoi(argv[2]);
+    portno = atoi(argv[3]);
     bzero((char *)&server_addr, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
     server_addr.sin_port = htons(portno);
@@ -43,9 +92,11 @@ int main(int argc, char *argv[]) {
 
     printf("Connected to server. Enter message to send (or 'exit' to quit): \n");
 
+
     fd_set readfds;
     FD_ZERO(&readfds);
-    FD_SET(STDIN_FILENO, &readfds); // stdin do zbiotu odczytu
+
+    FD_SET(STDIN_FILENO , &readfds); // stdin do zbiotu odczytu
     FD_SET(sock, &readfds);         // sock do zbioru do odczytu
 
     while (1) {
@@ -67,10 +118,11 @@ int main(int argc, char *argv[]) {
                 break;
             }
 
-            if (send(sock, input_buffer, strlen(input_buffer), 0) < 0) {
+            if (send(sock, sending(new_client_name,'1'), strlen(sending(new_client_name,'1')), 0) < 0) {
                 perror("send() error");
                 exit(EXIT_FAILURE);
             }
+            printf("Client name: %s\n", new_client_name);
         }
 
 
@@ -96,4 +148,3 @@ int main(int argc, char *argv[]) {
     close(sock);
     return 0;
 }
-
