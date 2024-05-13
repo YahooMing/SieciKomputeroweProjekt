@@ -1,0 +1,2 @@
+# SieciKomputeroweProjekt
+Projekt na studia
