@@ -35,6 +35,48 @@ int create_data(int idx, struct CALCDATA *cdata){
     return(0);
 }
 
+char* responding(char option, int port) {
+    char port_str[5];
+    sprintf(port_str, "%d", port);
+
+    // Obliczanie długości wiadomości
+    int message_length = 13 + strlen(port_str);
+
+    // Alokacja pamięci dla wiadomości
+    char *message = (char *)malloc((message_length + 1) * sizeof(char)); // +1 na znak końca ciągu
+
+    if (message == NULL) {
+        fprintf(stderr, "Błąd alokacji pamięci.\n");
+        exit(EXIT_FAILURE);
+    }
+
+    message[0] = '@';
+
+    switch(option) {
+        // Case dla N
+        case 'N': 
+            for(int i = 1; i < 10; i++) {
+                message[i] = '0';
+            }
+            message[10] = '!';
+            message[11] = 'P';
+            message[12] = ':';
+
+            // Kopiowanie ciągu znaków port_str do message
+            strncpy(&message[13], port_str, strlen(port_str));
+            message[13 + strlen(port_str)] = '#';
+            break;
+        default:
+            message[1] = 'E';
+            break;
+    }
+
+    //message[message_length] = '\0'; // Dodanie znaku końca ciągu
+
+    return message;
+}
+
+
 int create_package(char* package, char* name, char option){
   int nlen=strlen(name);
   if (nlen>8){
@@ -238,7 +280,7 @@ Oto dokładne wyjaśnienie każdej części kodu:
           buffer[bytes_received] = '\0';
           printf("Message from client %d: %s\n", client_socket, buffer);
           char response[] = "Dane zostaly otrzymane";
-          send(client_socket, response, strlen(response), 0);
+          send(client_socket, responding('N',server_port), strlen(responding('N',server_port)), 0);
         }
       }
     }

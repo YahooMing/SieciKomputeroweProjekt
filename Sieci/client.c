@@ -11,18 +11,21 @@
 #define BUFFER_SIZE 200
 
 char* sending(char* client_name, char option) {
-    static char message[15];
+    static char message[1000];
     message[0] = '@';
 
     switch(option) {
-        case '1': 
+        case 'N': 
             strncpy(&message[1], client_name, sizeof(message) - 1);
             message[9] = '0';
             message[10] = '!';
             message[11] = 'N';
             message[12] = ':';
-            message[13] = '0';
-            message[14] = '#';
+            for(int i=13;i<999;i++){
+                message[i]='0';
+            }
+            message[999] = '#';
+
             break;
         default:
             message[1] = 'E';
@@ -44,6 +47,7 @@ int main(int argc, char *argv[]) {
     //printf("Client name length: %d\n", client_name_len);
     //Jeżeli nazwa klienta ma mniej niż 8 znaków to uzupełnij resztę _ do 8 znaków
     char new_client_name[8];
+
     if (client_name_len < 8) {
         
         for (int i = 0; i < 8; i++) {
@@ -118,11 +122,13 @@ int main(int argc, char *argv[]) {
                 break;
             }
 
-            if (send(sock, sending(new_client_name,'1'), strlen(sending(new_client_name,'1')), 0) < 0) {
+            if (send(sock, sending(new_client_name,'N'), strlen(sending(new_client_name,'N')), 0) < 0) {
                 perror("send() error");
                 exit(EXIT_FAILURE);
             }
-            printf("Client name: %s\n", new_client_name);
+
+            //printf("Client name: %s\n", new_client_name);
+            printf(sending(new_client_name,'N'));
         }
 
 
